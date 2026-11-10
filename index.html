@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Escala Compacta</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    padding:15px;
+}
+
+.topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+button{
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.nav{
+    background:#2563eb;
+    color:white;
+}
+
+.turmas{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+}
+
+.aBtn{background:#22c55e;}
+.bBtn{background:#38bdf8;}
+.cBtn{background:#ff9800;}
+.dBtn{background:#d500f9;color:white;}
+.allBtn{background:#64748b;color:white;}
+
+.info{
+    text-align:center;
+    margin-bottom:12px;
+    font-size:14px;
+}
+
+.diasSemana{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:1px;
+    margin-bottom:1px;
+}
+
+.diasSemana div{
+    background:#111827;
+    padding:8px;
+    text-align:center;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.calendario{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:1px;
+}
+
+.dia{
+    background:#1e293b;
+    min-height:75px;
+    padding:4px;
+    display:flex;
+    flex-direction:column;
+}
+
+.vazio{
+    background:#0f172a;
+}
+
+.numero{
+    font-weight:bold;
+    font-size:12px;
+}
+
+.turno{
+    margin-top:3px;
+    border-radius:4px;
+    text-align:center;
+    font-size:10px;
+    padding:2px;
+}
+
+.a{
+    background:#22c55e;
+    color:black;
+}
+
+.b{
+    background:#38bdf8;
+    color:black;
+}
+
+.c{
+    background:#ff9800;
+    color:black;
+}
+
+.d{
+    background:#d500f9;
+}
+
+.trabalho{
+    background:#38bdf8;
+    color:black;
+}
+
+.folga{
+    background:#fde047;
+    color:black;
+}
+
+.status{
+    margin:auto;
+    font-size:22px;
+    text-align:center;
+}
+
+.hoje{
+    outline:2px solid white;
+}
+
+</style>
+</head>
+<body>
+
+<div class="topo">
+    <button class="nav" onclick="anterior()">◀</button>
+    <h2 id="mesAno"></h2>
+    <button class="nav" onclick="proximo()">▶</button>
+</div>
+
+<div class="turmas">
+    <button class="aBtn" onclick="selecionar('A')">A</button>
+    <button class="bBtn" onclick="selecionar('B')">B</button>
+    <button class="cBtn" onclick="selecionar('C')">C</button>
+    <button class="dBtn" onclick="selecionar('D')">D</button>
+    <button class="allBtn" onclick="selecionar(null)">Todas</button>
+</div>
+
+<div class="info" id="info">
+Visualizando todas as turmas
+</div>
+
+<div class="diasSemana">
+    <div>DOM</div>
+    <div>SEG</div>
+    <div>TER</div>
+    <div>QUA</div>
+    <div>QUI</div>
+    <div>SEX</div>
+    <div>SÁB</div>
+</div>
+
+<div id="calendario" class="calendario"></div>
+
+<script>
+
+const meses=[
+"Janeiro","Fevereiro","Março","Abril",
+"Maio","Junho","Julho","Agosto",
+"Setembro","Outubro","Novembro","Dezembro"
+];
+
+let dataAtual=new Date();
+let turmaSelecionada=null;
+
+// 10/11/2026 = C/D
+const referencia=new Date(2026,10,10);
+
+function selecionar(turma){
+    turmaSelecionada=turma;
+    renderizar();
+}
+
+function obterEscala(data){
+
+    const dias=
+        Math.floor((data-referencia)/86400000);
+
+    const bloco=
+        Math.floor(dias/3);
+
+    if(bloco%2===0){
+
+        return{
+            dia:"C",
+            noite:"D"
+        };
+
+    }else{
+
+        return{
+            dia:"A",
+            noite:"B"
+        };
+    }
+}
+
+function renderizar(){
+
+    const ano=dataAtual.getFullYear();
+    const mes=dataAtual.getMonth();
+
+    document.getElementById("mesAno").innerHTML=
+        meses[mes]+" "+ano;
+
+    let html="";
+
+    const primeiroDia=
+        new Date(ano,mes,1).getDay();
+
+    const ultimoDia=
+        new Date(ano,mes+1,0).getDate();
+
+    for(let i=0;i<primeiroDia;i++){
+        html+='<div class="dia vazio"></div>';
+    }
+
+    const hoje=new Date();
+
+    for(let dia=1;dia<=ultimoDia;dia++){
+
+        const data=
+            new Date(ano,mes,dia);
+
+        const escala=
+            obterEscala(data);
+
+        let classe="dia";
+        let conteudo="";
+
+        if(
+            dia===hoje.getDate() &&
+            mes===hoje.getMonth() &&
+            ano===hoje.getFullYear()
+        ){
+            classe+=" hoje";
+        }
+
+        if(turmaSelecionada){
+
+            const trabalha=
+                escala.dia===turmaSelecionada ||
+                escala.noite===turmaSelecionada;
+
+            if(trabalha){
+
+                classe+=" trabalho";
+
+                conteudo=`
+                <div class="status">
+                    🔧
+                </div>`;
+
+            }else{
+
+                classe+=" folga";
+
+                conteudo=`
+                <div class="status">
+                    🛋️
+                </div>`;
+            }
+
+        }else{
+
+            conteudo=`
+                <div class="turno ${escala.dia.toLowerCase()}">
+                    ☀ ${escala.dia}
+                </div>
+
+                <div class="turno ${escala.noite.toLowerCase()}">
+                    🌙 ${escala.noite}
+                </div>
+            `;
+        }
+
+        html+=`
+        <div class="${classe}">
+            <div class="numero">${dia}</div>
+            ${conteudo}
+        </div>`;
+    }
+
+    document.getElementById("calendario").innerHTML=html;
+
+    document.getElementById("info").innerHTML=
+        turmaSelecionada
+        ? `Turma ${turmaSelecionada}`
+        : "Visualizando todas as turmas";
+}
+
+function proximo(){
+    dataAtual.setMonth(dataAtual.getMonth()+1);
+    renderizar();
+}
+
+function anterior(){
+    dataAtual.setMonth(dataAtual.getMonth()-1);
+    renderizar();
+}
+
+renderizar();
+
+</script>
+
+</body>
+</html>
